@@ -1,5 +1,5 @@
 # ggPlotteR
-A Shiny App that demonstrates how plots are encoded with the ggplot2
+A Shiny App that demonstrates how plots are encoded with R/ggplot2
 
 
 ### Running the App
