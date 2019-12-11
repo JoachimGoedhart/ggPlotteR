@@ -19,7 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+# To implement:
+# Facetting
+# Stats (boxplot, mean, median, violinplot, raincloudplot)
+# User-defined code
 
 library(shiny)
 library(ggplot2)
@@ -75,7 +78,8 @@ ui <- fluidPage(
             hr(),
 
             
-            
+           
+            ######### Change Scales ###########
             
             actionLink("toggle_scales", h4("⇩ Change Scales")),
             conditionalPanel(
@@ -99,6 +103,9 @@ ui <- fluidPage(
             
 
             hr(),
+            
+            ######### Change Labels ###########
+            
             actionLink("toggle_labels", h4("⇩ Change Labels")),
             conditionalPanel(
               condition = "input.toggle_labels % 2 == 1",
@@ -111,6 +118,9 @@ ui <- fluidPage(
             ),
             
             hr(),
+            
+            ######### Change Theme ###########
+            
             actionLink("toggle_themes", h4("⇩ Change Theme")),
             conditionalPanel(
               condition = "input.toggle_themes % 2 == 1",
@@ -119,7 +129,16 @@ ui <- fluidPage(
                 checkboxInput(inputId = "no_grid", label = "Remove gridlines", value = FALSE),
               NULL
               
-           ),
+            ),
+            hr(),
+              
+            ######### Custom Input ###########             
+            
+            actionLink("toggle_custom", h4("⇩ Custom code")),
+            conditionalPanel(
+              condition = "input.toggle_custom % 2 == 1",
+              
+              textInput("code", "Code", value = "")),
 
             
               NULL),
@@ -341,6 +360,8 @@ r_code <- renderText({
   if(input$map_color!="No" && input$y_var=="-") c <-paste0(c,"  aes(fill=",input$map_color, ") +\n")
 
   if(input$map_alpha!="No") c <-paste0(c,"  aes(alpha=",input$map_alpha, ") +\n")  
+  
+  if(input$code!="") c <-paste0(c,"  ",input$code," +\n")  
     
   if (input$log_x) c <-paste0(c,"  scale_x_log10() +\n")
   if (input$log_y) c <-paste0(c,"  scale_y_log10() +\n")
