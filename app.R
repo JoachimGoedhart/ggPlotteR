@@ -20,9 +20,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # To implement:
-# Facetting
 # Stats (boxplot, mean, median, violinplot, raincloudplot)
-# User-defined code
+
 
 library(shiny)
 library(ggplot2)
@@ -94,7 +93,8 @@ ui <- fluidPage(
                              #range_y
                              textInput("range_y", "Range y-axis (min,max)", value = ""),
                              #log_y
-                             checkboxInput(inputId = "log_y", label = "Use Log10 scale for y-axis", value = FALSE)
+                             checkboxInput(inputId = "log_y", label = "Use Log10 scale for y-axis", value = FALSE),
+                             checkboxInput(inputId = "flip", label = "Rotate plot 90 degrees", value = FALSE)
                              
 
                              #Close Scaling-section
@@ -127,6 +127,20 @@ ui <- fluidPage(
                 selectInput("theme", label = NA, choices = list("-"="theme_grey", "theme_light"="theme_light", "theme_minimal"="theme_minimal", "theme_classic"="theme_classic", "theme_dark"="theme_dark"), selected ="-"),
                 numericInput("theme_size", "Theme size:", value = "11"),
                 checkboxInput(inputId = "no_grid", label = "Remove gridlines", value = FALSE),
+
+              NULL
+              
+            ),
+            hr(),
+            
+            ######### Multiples ###########
+            
+            actionLink("toggle_facets", h4("⇩ Multiples (Faceting)")),
+            conditionalPanel(
+              condition = "input.toggle_facets % 2 == 1",
+              selectInput("facet_row", label = "Rows", choices = ".", selected = "."),
+              selectInput("facet_col", label = "Columns", choices = ".", selected = "."),
+              
               NULL
               
             ),
@@ -294,7 +308,7 @@ output$data_uploaded <- renderTable(
     vary_list <- c("-",nms_var)
     mapping_list_num <- c("No",nms_var)
     mapping_list_all <- c("No",var_names)
-    facet_list <- c(".",nms_fact)
+    facet_list_factors <- c(".",nms_fact)
     
     updateSelectInput(session, "x_var", choices = varx_list)
     updateSelectInput(session, "y_var", choices = vary_list)
@@ -302,6 +316,8 @@ output$data_uploaded <- renderTable(
     updateSelectInput(session, "map_color", choices = mapping_list_all)
     updateSelectInput(session, "map_alpha", choices = mapping_list_all)
     updateSelectInput(session, "grouping", choices = varx_list)
+    updateSelectInput(session, "facet_row", choices = facet_list_factors)
+    updateSelectInput(session, "facet_col", choices = facet_list_factors)    
   })
   
 
@@ -369,8 +385,11 @@ r_code <- renderText({
   if (input$range_x !="") c <-paste0(c,"  coord_cartesian(xlim=c(",input$range_x,")) +\n")
   if (input$range_y !="") c <-paste0(c,"  coord_cartesian(ylim=c(",input$range_y,")) +\n")
   
+  #Flip axis
+  if (input$flip) c <- paste0(c,"  coord_flip() +\n")
+  
   if(input$lab_x!="") c <- paste0(c, "  labs(x = '",input$lab_x,"')+\n")
-  if(input$lab_y!="") c <- paste0(c, "  labs(y = '",input$lab_y,"')+\n")          
+  if(input$lab_y!="") c <- paste0(c, "  labs(y = '",input$lab_y,"')+\n")    
 
 #  if (input$theme!="-") c <- paste0(c,"  ",input$theme,"() +\n")  
   
@@ -385,6 +404,9 @@ r_code <- renderText({
   #Remove Grid
   if (input$no_grid) c <- paste0(c,"  theme(panel.grid = element_blank()) +\n")
 
+  if (input$facet_row!="." || input$facet_col!=".") c <- paste0(c,"  facet_grid(",input$facet_row,"~",input$facet_col,") +\n")
+
+  
   c <- paste0(c,"  NULL")
   
   })
