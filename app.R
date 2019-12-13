@@ -29,6 +29,8 @@ library(ggplot2)
 # data from: https://github.com/resbaz/r-novice-gapminder-files
 df_gapminder <- read.csv("gapminder-FiveYearData.csv", na.strings = "")
 
+df_cancer <- read.csv("Cancer_over_time.csv", na.strings = "")
+
 # Create a reactive object here that we can share between all the sessions.
 vals <- reactiveValues(count=0)
 
@@ -164,6 +166,7 @@ ui <- fluidPage(
                 "data_input", "",
                 choices = 
                   list("Example data (Gapminder)" = 1,
+                       "Example data (Cancer mortality)" = 2,
                        "Upload TXT or CSV file" = 3
                   )
                 ,
@@ -184,6 +187,11 @@ ui <- fluidPage(
                     selected = ",")
 
                 ),
+              hr(),
+              selectInput("filter_column", "Filter based on this parameter:", choices = ""),
+              selectInput("remove_these_conditions", "Deselect these conditions:", "", multiple = TRUE),
+              
+              
 
               NULL
               ),
@@ -230,7 +238,8 @@ df_upload <- reactive({
     
     if (input$data_input == 1) {
       data <- df_gapminder
-
+    } else if (input$data_input == 2) {
+      data <- df_cancer
     } else if (input$data_input == 3) {
       file_in <- input$upload
       # Avoid error message while file is not uploaded yet
@@ -312,13 +321,64 @@ output$data_uploaded <- renderTable(
     
     updateSelectInput(session, "x_var", choices = varx_list)
     updateSelectInput(session, "y_var", choices = vary_list)
-    updateSelectInput(session, "map_size", choices = mapping_list_num)
+    updateSelectInput(session, "map_size", choices = mapping_list_all)
     updateSelectInput(session, "map_color", choices = mapping_list_all)
     updateSelectInput(session, "map_alpha", choices = mapping_list_all)
     updateSelectInput(session, "grouping", choices = varx_list)
     updateSelectInput(session, "facet_row", choices = facet_list_factors)
-    updateSelectInput(session, "facet_col", choices = facet_list_factors)    
+    updateSelectInput(session, "facet_col", choices = facet_list_factors)
+    updateSelectInput(session, "filter_column", choices = varx_list, selected="-")
   })
+  
+  
+  ########### Get the list of factors from a variable ############
+  
+  observeEvent(input$filter_column != '-', {
+    
+    if (input$filter_column != '-') {
+      
+      filter_column <- input$filter_column
+      
+      if (filter_column == "") {filter_column <- NULL}
+      
+      koos <- df_upload() %>% select(for_filtering = !!filter_column)
+      
+      conditions_list <- levels(factor(koos$for_filtering))
+      # observe(print((conditions_list)))
+      updateSelectInput(session, "remove_these_conditions", choices = conditions_list)
+    }
+    
+  })
+  
+  
+
+  
+  ################ REMOVE SELECTED COLUMNS #########
+  df_filtered <- reactive({     
+    
+  
+    if (!is.null(input$remove_these_conditions) && input$filter_column != "none") {
+      
+      filter_column <- input$filter_column
+      remove_these_conditions <- input$remove_these_conditions
+      
+      observe({print(remove_these_conditions)})
+      
+      #Remove the columns that are selected (using filter() with the exclamation mark preceding the condition)
+      # https://dplyr.tidyverse.org/reference/filter.html
+      df <- df_upload() %>% filter(!.data[[filter_column[[1]]]] %in% !!remove_these_conditions)
+      
+      
+    } else {df <- df_upload()}
+    
+    #Replace space and dot of header names by underscore
+    df <- df %>%  
+      select_all(~gsub("\\s+|\\.", "_", .))
+    
+    
+})
+  
+  
   
 
   ##### Render the plot ############
@@ -326,7 +386,7 @@ output$data_uploaded <- renderTable(
 output$coolplot <- renderPlot({
     #Clean the canvas if ggplot is not initiated
     if(input$start != TRUE) {return(NULL)}
-    df <- as.data.frame(df_upload())
+    df <- as.data.frame(df_filtered())
     p <- eval(parse(text = r_code()))
     p
   })
