@@ -25,6 +25,8 @@
 
 library(shiny)
 library(ggplot2)
+library(magrittr)
+library(dplyr)
 
 # data from: https://github.com/resbaz/r-novice-gapminder-files
 df_gapminder <- read.csv("gapminder-FiveYearData.csv", na.strings = "")
@@ -188,7 +190,7 @@ ui <- fluidPage(
 
                 ),
               hr(),
-              selectInput("filter_column", "Filter based on this parameter:", choices = ""),
+              selectInput("filter_column", "Filter based on this parameter:", choices = "-", selected = "-"),
               selectInput("remove_these_conditions", "Deselect these conditions:", "", multiple = TRUE),
               
               
@@ -276,10 +278,6 @@ output$data_uploaded <- renderTable(
   )
   
   
-  
-  
-  
-  
   geom.selected <- "-"
   #Retrieve the currently selected geom and use as default, even when y_var changes
   observe({
@@ -327,26 +325,23 @@ output$data_uploaded <- renderTable(
     updateSelectInput(session, "grouping", choices = varx_list)
     updateSelectInput(session, "facet_row", choices = facet_list_factors)
     updateSelectInput(session, "facet_col", choices = facet_list_factors)
-    updateSelectInput(session, "filter_column", choices = varx_list, selected="-")
+    updateSelectInput(session, "filter_column", choices = varx_list)
   })
   
   
   ########### Get the list of factors from a variable ############
   
-  observeEvent(input$filter_column != '-', {
+observeEvent(input$filter_column != '-', {
     
-    if (input$filter_column != '-') {
-      
       filter_column <- input$filter_column
-      
-      if (filter_column == "") {filter_column <- NULL}
-      
+
+      if (filter_column == "-") {filter_column <- NULL}
+
       koos <- df_upload() %>% select(for_filtering = !!filter_column)
-      
+
       conditions_list <- levels(factor(koos$for_filtering))
       # observe(print((conditions_list)))
       updateSelectInput(session, "remove_these_conditions", choices = conditions_list)
-    }
     
   })
   
@@ -357,28 +352,28 @@ output$data_uploaded <- renderTable(
   df_filtered <- reactive({     
     
   
-    if (!is.null(input$remove_these_conditions) && input$filter_column != "none") {
-      
+    if (!is.null(input$remove_these_conditions) && input$filter_column != "-") {
+
       filter_column <- input$filter_column
       remove_these_conditions <- input$remove_these_conditions
-      
+
       observe({print(remove_these_conditions)})
-      
+
       #Remove the columns that are selected (using filter() with the exclamation mark preceding the condition)
       # https://dplyr.tidyverse.org/reference/filter.html
       df <- df_upload() %>% filter(!.data[[filter_column[[1]]]] %in% !!remove_these_conditions)
-      
-      
-    } else {df <- df_upload()}
+
+
+    } else {
+      df <- df_upload()
+    }
     
+    return(df)
     #Replace space and dot of header names by underscore
-    df <- df %>%  
-      select_all(~gsub("\\s+|\\.", "_", .))
-    
+    # df <- df %>%  
+    #   select_all(~gsub("\\s+|\\.", "_", .))
     
 })
-  
-  
   
 
   ##### Render the plot ############
