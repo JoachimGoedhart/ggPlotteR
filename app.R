@@ -53,18 +53,13 @@ ui <- fluidPage(
               selectInput("x_var", label = "Select variable for x-axis", choices = ""),
               selectInput("y_var", label = "Select variable for y-axis", choices = ""),
             
-            h3("Select 'Geom'"),
-              selectInput("geom", label = NA, choices = list("-"="-", "geom_point"="geom_point", "geom_jitter"="geom_jitter", "geom_dotplot"="geom_dotplot")),
+            h3("Select Geom(etry)"),
+              selectInput("geom", label = NULL, choices = list("-"="-", "geom_point"="geom_point", "geom_jitter"="geom_jitter", "geom_dotplot"="geom_dotplot")),
             conditionalPanel(condition = "input.geom=='geom_line'",  
             selectInput('grouping', label="Group", choices = list("-"="-"), selected = "-")
             ),
             h3("Modify the appearance"),
-             #size (only when y-variable is specified)
-              conditionalPanel(condition = "input.y_var!='-'",
-                 selectInput("map_size", label = "Select a variable that reflects size", choices = list("No"="No"), selected = "No"),
-                 conditionalPanel(condition = "input.map_size=='No'",
-                       sliderInput("size", "Set a general size:", min = 0, max = 10, value = 1)
-                       ),hr()),
+
               
             #color or fill
               selectInput("map_color", label = "Select a variable that reflects color", choices = list("No"="No"), selected = "No"),
@@ -72,6 +67,22 @@ ui <- fluidPage(
                              textInput("color", "Set a general color:", value='black')
             ),
             hr(),
+            
+            #shape (only when y-variable is specified)
+            conditionalPanel(condition = "input.y_var!='-'",
+                             selectInput("map_shape", label = "Select a variable that reflects shape", choices = list("No"="No"), selected = "No"),
+                             conditionalPanel(condition = "input.map_shape=='No'",
+                                              sliderInput("shape", "Set a general shape:", min = 0, max = 25, value = 19)
+                             ),hr()),
+            
+            
+            #size (only when y-variable is specified)
+            conditionalPanel(condition = "input.y_var!='-'",
+                             selectInput("map_size", label = "Select a variable that reflects size", choices = list("No"="No"), selected = "No"),
+                             conditionalPanel(condition = "input.map_size=='No'",
+                                              sliderInput("size", "Set a general size:", min = 0, max = 10, value = 1)
+                             ),hr()),
+            
             #alpha
             selectInput("map_alpha", label = "Select a variable that reflects transparancy", choices = list("No"="No"), selected = "No"),
             conditionalPanel(condition = "input.map_alpha=='No'",
@@ -320,6 +331,7 @@ output$data_uploaded <- renderTable(
     updateSelectInput(session, "x_var", choices = varx_list)
     updateSelectInput(session, "y_var", choices = vary_list)
     updateSelectInput(session, "map_size", choices = mapping_list_all)
+    updateSelectInput(session, "map_shape", choices = mapping_list_all)
     updateSelectInput(session, "map_color", choices = mapping_list_all)
     updateSelectInput(session, "map_alpha", choices = mapping_list_all)
     updateSelectInput(session, "grouping", choices = varx_list)
@@ -412,8 +424,9 @@ r_code <- renderText({
         #define geom and open bracket
         c <- paste0(c, "  ",input$geom, "(") 
 
-        if (input$map_size=="No" && input$size!="1") {c <- paste0(c, "size = ",input$size,", ")}
         if (input$map_color=="No" && input$color!="black") {c <- paste0(c, "color = '",input$color,"', ")}
+        if (input$map_size=="No" && input$size!="1") {c <- paste0(c, "size = ",input$size,", ")}
+        if (input$map_shape=="No" && input$shape!="19") {c <- paste0(c, "shape = ",input$shape,", ")}
         if (input$map_alpha=="No" && input$alpha!="1") {c <- paste0(c, "alpha = ",input$alpha,", ")}
         
         #close bracket
@@ -430,6 +443,8 @@ r_code <- renderText({
   #Add fill to his/density/dotplot
   if(input$map_color!="No" && input$y_var=="-") c <-paste0(c,"  aes(fill=",input$map_color, ") +\n")
 
+  if(input$map_shape!="No") c <-paste0(c,"  aes(shape=",input$map_shape, ") +\n")  
+  
   if(input$map_alpha!="No") c <-paste0(c,"  aes(alpha=",input$map_alpha, ") +\n")  
   
   if(input$code!="") c <-paste0(c,"  ",input$code," +\n")  
