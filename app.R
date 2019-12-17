@@ -325,13 +325,14 @@ output$data_uploaded <- renderTable(
 
     vary_list <- c("-",nms_var)
     mapping_list_num <- c("No",nms_var)
+    mapping_list_fact <- c("No",nms_fact)
     mapping_list_all <- c("No",var_names)
     facet_list_factors <- c(".",nms_fact)
     
     updateSelectInput(session, "x_var", choices = varx_list)
     updateSelectInput(session, "y_var", choices = vary_list)
     updateSelectInput(session, "map_size", choices = mapping_list_all)
-    updateSelectInput(session, "map_shape", choices = mapping_list_all)
+    updateSelectInput(session, "map_shape", choices = mapping_list_fact)
     updateSelectInput(session, "map_color", choices = mapping_list_all)
     updateSelectInput(session, "map_alpha", choices = mapping_list_all)
     updateSelectInput(session, "grouping", choices = varx_list)
