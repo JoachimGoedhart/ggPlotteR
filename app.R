@@ -161,6 +161,20 @@ ui <- fluidPage(
             ),
             hr(),
               
+            
+            ######### Multiples ###########
+            
+            actionLink("add_stats", h4("⇩ Add statistic")),
+
+            
+            conditionalPanel(
+              condition = "input.add_stats % 2 == 1",
+              selectInput("stats", label = "", choices = list("-"="-", "boxplot"="geom_boxplot(fill=NA)", "violinplot"="geom_violin(fill=NA)",  "mean"="mean", "median"="median",  "rugs"="geom_rug()", "trend line"="geom_smooth()"), selected ="-")
+            ),
+            
+            
+            hr(),
+            
             ######### Custom Input ###########             
             
             actionLink("toggle_custom", h4("⇩ Custom code")),
@@ -447,7 +461,20 @@ r_code <- renderText({
   if(input$map_shape!="No") c <-paste0(c,"  aes(shape=",input$map_shape, ") +\n")  
   
   if(input$map_alpha!="No") c <-paste0(c,"  aes(alpha=",input$map_alpha, ") +\n")  
+
+  if(input$stats!="-") {
+    
+    if (input$stats=="mean" || input$stats=="median" )
+    {
+      c <-paste0(c,"  stat_summary(fun.y = ",input$stats,", fun.ymin=",input$stats,", fun.ymax=",input$stats,", geom='crossbar') +\n")
+      
+    } else {
+    
+    c <-paste0(c,"  ",input$stats, " +\n")
+    }
+  }
   
+    
   if(input$code!="") c <-paste0(c,"  ",input$code," +\n")  
     
   if (input$log_x) c <-paste0(c,"  scale_x_log10() +\n")
