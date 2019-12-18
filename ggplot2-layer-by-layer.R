@@ -19,7 +19,7 @@ p <- ggplot(data = df) +
   labs(x = "Continent") +
   labs(y= "Life Expectency") +
   labs(title="Title of the graph") +
-  stat_summary(fun.y = median, fun.ymin=median, fun.ymax=median, geom="errorbar", size=1,color="black") +
+  stat_summary(fun.y = median, fun.ymin=median, fun.ymax=median, geom="crossbar") +
 
   NULL
   
