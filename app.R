@@ -228,7 +228,10 @@ ui <- fluidPage(
             #Session counter: https://gist.github.com/trestletech/9926129
             h4("About"),  "There are currently", 
             verbatimTextOutput("count"),
-            "session(s) connected to this app."  
+            "session(s) connected to this app." ,
+            hr(),
+            h4("Find our other dataViz apps at:"),a("https://huygens.science.uva.nl/", href = "https://huygens.science.uva.nl/")
+            
           )
                    
                    
@@ -240,7 +243,9 @@ ui <- fluidPage(
         tabsetPanel(id="tabs",
                     tabPanel("Plot",h3("R-code and Plot",br(),br(),
                                        actionButton("settings_copy", icon = icon("clone"),
-                                                    label = "Copy R-code")
+                                                    label = "Copy R-code"),
+                                       downloadButton("downloadPlotPDF", "Download pdf-file"),
+                                       downloadButton("downloadPlotPNG", "Download png-file")
                                        
                                        ),
                              splitLayout(cellWidths = c("40%", "60%"),
@@ -403,14 +408,18 @@ observeEvent(input$filter_column != '-', {
 })
   
 
-  ##### Render the plot ############
-  
-output$coolplot <- renderPlot({
+##### Define the plot ############
+plotdata <- reactive({
     #Clean the canvas if ggplot is not initiated
     if(input$start != TRUE) {return(NULL)}
     df <- as.data.frame(df_filtered())
     p <- eval(parse(text = r_code()))
     p
+  })
+  
+##### Render the plot ############
+output$coolplot <- renderPlot({
+    plot(plotdata())
   })
   
 output$cooltext <- renderText({
@@ -512,6 +521,39 @@ r_code <- renderText({
 observeEvent(input$settings_copy , {
   showModal(urlModal(url=r_code(), title = "R-code to create the plot"))
 })
+
+
+######### DEFINE DOWNLOAD BUTTONS ###########
+
+##### Set width and height of the plot area
+plot_size <- 800
+
+
+output$downloadPlotPDF <- downloadHandler(
+  filename <- function() {
+    paste("ggPlot_", Sys.time(), ".pdf", sep = "")
+  },
+  content <- function(file) {
+    pdf(file, width = plot_size/72, height = plot_size/72)
+    plot(plotdata())
+    dev.off()
+  },
+  contentType = "application/pdf" # MIME type of the image
+)
+
+output$downloadPlotPNG <- downloadHandler(
+  filename <- function() {
+    paste("ggPlot_", Sys.time(), ".png", sep = "")
+  },
+  content <- function(file) {
+    png(file, width = plot_size*4, height = plot_size*4, res=300)
+    plot(plotdata())
+    dev.off()
+  },
+  contentType = "application/png" # MIME type of the image
+)
+
+
 
 
 ########### Update count #########
