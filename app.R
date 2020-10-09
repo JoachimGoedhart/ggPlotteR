@@ -28,6 +28,8 @@ library(ggplot2)
 library(magrittr)
 library(dplyr)
 
+source('function_tidy_df.R')
+
 # data from: https://github.com/resbaz/r-novice-gapminder-files
 df_gapminder <- read.csv("gapminder-FiveYearData.csv", na.strings = "")
 
@@ -162,7 +164,7 @@ ui <- fluidPage(
             hr(),
               
             
-            ######### Multiples ###########
+            ######### Stats ###########
             
             actionLink("add_stats", h4("⇩ Add statistic")),
 
@@ -185,6 +187,8 @@ ui <- fluidPage(
 
             
               NULL),
+          
+          ######## Data Input Panel ##########
               conditionalPanel(
                   condition = "input.tabs=='Data'",
               h4("Data upload"),
@@ -211,14 +215,25 @@ ui <- fluidPage(
                            "Tab" = "\t",
                            "Semicolon" = ";",
                            "Space" = " "),
-                    selected = ",")
+                    selected = ","),
+                hr(),
+                checkboxInput(inputId = "toggle_tidy", label = "Convert to tidy", value = FALSE),
 
                 ),
+
+              # actionLink("toggle_tidy", h4("⇩ Tidy the data")),
+              conditionalPanel(
+                condition = "input.toggle_tidy==true",
+                
+                ########### Ask for number of rows and labels (optional) ############
+                numericInput("n_conditions", "Number of rows that specify parameters:", value = 1,min = 1,max=10,step = 1),
+                textInput("labels", "Labels for parameters (separated by comma):", value = ""),
+              
+              NULL),
+            
               hr(),
               selectInput("filter_column", "Filter based on this parameter:", choices = "-", selected = "-"),
               selectInput("remove_these_conditions", "Deselect these conditions:", "", multiple = TRUE),
-              
-              
 
               NULL
               ),
@@ -238,7 +253,7 @@ ui <- fluidPage(
       ),   #Close sidebarPanel
 
       
-      # Show a plot of the generated distribution
+      # Show the plot & code
       mainPanel(
         tabsetPanel(id="tabs",
                     tabPanel("Plot",h3("R-code and Plot",br(),br(),
@@ -278,17 +293,29 @@ df_upload <- reactive({
       if (is.null(input$upload)) {
         return(data.frame(x = "Select your datafile"))
       } else  {
-        isolate({
+        # isolate({
 
             # data <- read_delim(file_in$datapath,
             #                    delim = input$upload_delim,
             #                    col_names = TRUE)
           
+          if (input$toggle_tidy == FALSE) {
           data <- read.csv(file=file_in$datapath,
                              sep = input$upload_delim)
+          
+          } else if (input$toggle_tidy == TRUE) {
+            df <- read.csv(file=file_in$datapath,
+                             sep = input$upload_delim, header = FALSE)
+            
+            labels <- gsub("\\s","", strsplit(input$labels,",")[[1]])
+            observe({print(labels)})
+            data <- tidy_df(df, n = input$n_conditions, labels = labels)
+          }
+          
+          
           # observe({print(input$upload$name)})
            
-        })
+        # }) # close isolate
       }
     }
     return(data)
@@ -520,6 +547,10 @@ r_code <- renderText({
 
 observeEvent(input$settings_copy , {
   showModal(urlModal(url=r_code(), title = "R-code to create the plot"))
+})
+
+observeEvent(input$do_tidy , {
+  
 })
 
 
