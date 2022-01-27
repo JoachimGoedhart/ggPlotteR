@@ -1,0 +1,15 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: ggPlotteR - coding a plot line by line
+message: Please cite this software using these metadata.
+type: software
+authors:
+  - given-names: Joachim
+    family-names: Goedhart
+    email: j.goedhart@uva.nl
+    affiliation: SILS - UvA
+    orcid: 'https://orcid.org/0000-0002-0630-3825'
+url: 'https://huygens.science.uva.nl/ggPlotteR/'
+license: GPL-3.0
