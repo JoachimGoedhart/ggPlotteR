@@ -12,6 +12,7 @@ require(tidyr)
 require(dplyr)
   
 df_wide <- as.data.frame(df)
+
 number_of_parameters <- n
 
 # parameters <- c('Treatment', 'Concentration', 'Replicate')
@@ -38,8 +39,6 @@ if (length(unique(combined_labels))!=length(combined_labels)) {
 #Remove first n rows
 df_wide <- df_wide[-c(1:number_of_parameters),]
 
-
-
 #Set new column names (still concatenated by underscore if n>1)
 colnames(df_wide) <- combined_labels
 
@@ -49,7 +48,7 @@ df_tidy <- gather(df_wide, Condition, Measurement)
 #Split column with condition into multiple columns. Splits defined by underscore
 df_tidy <- df_tidy %>% separate(Condition, parameters, sep = '_')
 
-# Change column with measurements to nummeric
+# Change column with measurements to numeric
 df_tidy$Measurement <- as.numeric(df_tidy$Measurement)
 
 # If labels are supplied, use these to change the column names

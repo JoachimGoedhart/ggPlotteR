@@ -8,11 +8,13 @@ df <- read.csv("gapminder-FiveYearData.csv")
 p <- ggplot(data = df) +
   aes(x=continent) +
   aes(y=lifeExp) +
-  geom_jitter() +
-#  geom_boxplot(fill = NA, size=1) +
-  aes(color=year) +
+  geom_violin() +
+ geom_boxplot(fill = NA, size=1) +
+  # aes(color=continent) +
   
-  coord_flip() +
+  aes(fill=continent) +
+  
+    coord_flip() +
   scale_y_continuous(limits=c(10,100)) +
   
   labs(color="Year") +

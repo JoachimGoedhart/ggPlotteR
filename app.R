@@ -49,11 +49,16 @@ ui <- fluidPage(
       sidebarPanel(width=3,
           conditionalPanel(
             condition = "input.tabs=='Plot'",
-              checkboxInput(inputId = "start", label = "Initiate ggplot", value = TRUE),
             h3('Map data to coordinates'),
 
-              selectInput("x_var", label = "Select variable for x-axis", choices = ""),
-              selectInput("y_var", label = "Select variable for y-axis", choices = ""),
+            div(
+              style = "display: grid; 
+                            grid-template-columns: 30% 30% 30% 10%;
+                            grid-gap: 10px;",
+            
+              selectInput("x_var", label = "X variable", choices = ""),
+              selectInput("y_var", label = "Y variable", choices = "")
+            ),
             
             h3("Select Geom(etry)"),
               selectInput("geom", label = NULL, choices = list("-"="-", "geom_point"="geom_point", "geom_jitter"="geom_jitter", "geom_dotplot"="geom_dotplot")),
@@ -396,7 +401,7 @@ observeEvent(input$filter_column != '-', {
 
       if (filter_column == "-") {filter_column <- NULL}
 
-      koos <- df_upload() %>% select(for_filtering = !!filter_column)
+      koos <- df_upload() %>% dplyr::select(for_filtering = !!filter_column)
 
       conditions_list <- levels(factor(koos$for_filtering))
       # observe(print((conditions_list)))
@@ -437,8 +442,6 @@ observeEvent(input$filter_column != '-', {
 
 ##### Define the plot ############
 plotdata <- reactive({
-    #Clean the canvas if ggplot is not initiated
-    if(input$start != TRUE) {return(NULL)}
     df <- as.data.frame(df_filtered())
     p <- eval(parse(text = r_code()))
     p
@@ -468,7 +471,7 @@ r_code <- renderText({
   c <- ""
 
   
-  if(input$start == TRUE) {c <- paste(c,"ggplot(data = df) +\n")}
+  c <- paste(c,"ggplot(data = df) +\n")
   if (input$x_var != "-") c <- paste0(c,"  aes(x=",input$x_var,") +\n")
   if (input$y_var != "-") c <- paste0(c,"  aes(y=",input$y_var,") +\n")
   if (input$geom != "-") {
